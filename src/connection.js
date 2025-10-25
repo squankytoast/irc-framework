@@ -201,6 +201,10 @@ module.exports = class Connection extends EventEmitter {
         return tmr;
     }
 
+    hasTimeout(tmr) {
+        return (this._timers.includes(tmr));
+    }
+
     clearTimeout(tmr) {
         clearTimeout(tmr);
         _.pull(this._timers, tmr);

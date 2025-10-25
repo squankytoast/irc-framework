@@ -342,7 +342,7 @@ module.exports = class IrcClient extends EventEmitter {
 
         if (client.options.ping_interval <= 0) {
             return;
-        } else if (client.periodic_ping_timer) {
+        } else if (client.periodic_ping_timer && client.connection.hasTimeout(client.periodic_ping_timer)) {
             return; // do not create duplicate timer if already actively pinging the server
         }
 
