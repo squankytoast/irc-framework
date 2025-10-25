@@ -339,10 +339,11 @@ module.exports = class IrcClient extends EventEmitter {
 
     startPeriodicPing() {
         const client = this;
-        let ping_timer = null;
 
         if (client.options.ping_interval <= 0) {
             return;
+        } else if (client.periodic_ping_timer && client.connection.hasTimeout(client.periodic_ping_timer)) {
+            return; // do not create duplicate timer if already actively pinging the server
         }
 
         // Constantly ping the server for lag and time syncing functions
@@ -351,8 +352,8 @@ module.exports = class IrcClient extends EventEmitter {
         }
 
         function resetPingTimer() {
-            client.connection.clearTimeout(ping_timer);
-            ping_timer = client.connection.setTimeout(pingServer, client.options.ping_interval * 1000);
+            client.connection.clearTimeout(client.periodic_ping_timer);
+            client.periodic_ping_timer = client.connection.setTimeout(pingServer, client.options.ping_interval * 1000);
         }
 
         // Browsers have started throttling looped timeout callbacks
@@ -666,7 +667,11 @@ module.exports = class IrcClient extends EventEmitter {
 
         const commandName = 'ACTION';
         const blockLength = this.options.message_max_length - (commandName.length + 3);
-        const blocks = [...lineBreak(message, { bytes: blockLength, allowBreakingWords: true, allowBreakingGraphemes: true })];
+        const blocks = [...lineBreak(message, {
+            bytes: blockLength,
+            allowBreakingWords: true,
+            allowBreakingGraphemes: true
+        })];
 
         blocks.forEach(function(block) {
             that.ctcpRequest(target, commandName, block);
